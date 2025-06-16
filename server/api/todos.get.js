@@ -2,7 +2,7 @@
 import pool from '../utils/postgres.js';
 
 export default defineEventHandler(async (event) => {
-  // Example: fetch all todos
+  // Fetch all todos with new schema fields
   const { rows } = await pool.query('SELECT * FROM todos ORDER BY id DESC');
   return rows;
 });

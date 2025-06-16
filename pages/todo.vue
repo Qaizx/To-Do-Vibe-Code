@@ -1,36 +1,9 @@
 <template>
-  <div class="todo-container">
-    <h1>To-Do List</h1>
-    <form @submit.prevent="addTodo">
-      <input v-model="newTodo" placeholder="Add a new task" />
-      <button type="submit">Add</button>
-    </form>
-    <ul>
-      <li v-for="(todo, index) in todos" :key="index" :class="{ done: todo.done }">
-        <input type="checkbox" v-model="todo.done" />
-        <span>{{ todo.text }}</span>
-        <button @click="removeTodo(index)">Remove</button>
-      </li>
-    </ul>
-  </div>
+
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 
-const newTodo = ref('');
-const todos = ref<{ text: string; done: boolean }[]>([]);
-
-function addTodo() {
-  if (newTodo.value.trim()) {
-    todos.value.push({ text: newTodo.value, done: false });
-    newTodo.value = '';
-  }
-}
-
-function removeTodo(index: number) {
-  todos.value.splice(index, 1);
-}
 </script>
 
 <style scoped>

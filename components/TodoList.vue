@@ -6,12 +6,12 @@
       <button type="submit" class="add-btn">Add</button>
     </form>
     <ul class="todo-list">
-      <li v-for="(todo, index) in todos" :key="index" :class="['todo-item', { done: todo.done }]">
+      <li v-for="(todo, index) in todos" :key="todo.id" :class="['todo-item', { done: todo.completed }]">
         <label class="checkbox-container">
-          <input type="checkbox" v-model="todo.done" />
+          <input type="checkbox" :checked="todo.completed" @change="onCheckboxChange($event, todo, index)" />
           <span class="checkmark"></span>
         </label>
-        <span class="todo-text">{{ todo.text }}</span>
+        <span class="todo-text">{{ todo.title }}</span>
         <button @click="removeTodo(index)" class="remove-btn">✖</button>
       </li>
     </ul>
@@ -20,21 +20,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
 const newTodo = ref('');
-const todos = ref<{ text: string; done: boolean }[]>([]);
+const todos = ref<{ id: number; title: string; completed: boolean }[]>([]);
 
-function addTodo() {
+async function fetchTodos() {
+  const res = await fetch('/api/todos');
+  todos.value = await res.json();
+}
+
+async function addTodo() {
   if (newTodo.value.trim()) {
-    todos.value.push({ text: newTodo.value, done: false });
-    newTodo.value = '';
+    const res = await fetch('/api/todos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: newTodo.value })
+    });
+    const todo = await res.json();
+    if (!todo.error) {
+      todos.value.unshift(todo);
+      newTodo.value = '';
+    }
   }
 }
 
-function removeTodo(index: number) {
+async function removeTodo(index: number) {
+  const todo = todos.value[index];
+  await fetch(`/api/todos/${todo.id}`, { method: 'DELETE' });
   todos.value.splice(index, 1);
 }
+
+async function toggleCompleted(todo: { id: number; title: string; completed: boolean }, index: number, completed: boolean) {
+  const res = await fetch(`/api/todos/${todo.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ completed })
+  });
+  const updated = await res.json();
+  if (!updated.error) {
+    todos.value[index].completed = updated.completed;
+  }
+}
+
+function onCheckboxChange(event: Event, todo: { id: number; title: string; completed: boolean }, index: number) {
+  const target = event.target as HTMLInputElement;
+  toggleCompleted(todo, index, target.checked);
+}
+
+onMounted(fetchTodos);
 </script>
 
 <style scoped>
